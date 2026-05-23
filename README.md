@@ -1,1 +1,1 @@
-# Digital-calender-system-
+The Digital Calendar System is a software application used to manage schedules, events, and daily tasks digitally. It helps users organize important activities, set reminders, and improve time management efficiently.
