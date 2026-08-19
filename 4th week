@@ -1,0 +1,113 @@
+package calendarapp;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+// The class name now exactly matches your filename 'CalendarApp.java'
+public class CalendarApp extends JFrame {
+
+    // Declaring form components
+    private JTextField titleField;
+    private JTextArea descArea;
+    private JTextField dateField;
+    private JButton submitButton;
+
+    // Constructor name matches the class name
+    public CalendarApp() {
+        // Basic window settings
+        setTitle("Week 4: Event Creation Module");
+        setSize(400, 350);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null); // Centers the window on the screen
+        setLayout(new BorderLayout(10, 10));
+
+        // Creating the form panel using GridBagLayout for a clean layout
+        JPanel formPanel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        // 1. Event Title Field
+        gbc.gridx = 0; gbc.gridy = 0;
+        formPanel.add(new JLabel("Event Title:"), gbc);
+        
+        titleField = new JTextField(20);
+        gbc.gridx = 1; gbc.gridy = 0;
+        formPanel.add(titleField, gbc);
+
+        // 2. Event Description Field
+        gbc.gridx = 0; gbc.gridy = 1;
+        formPanel.add(new JLabel("Description:"), gbc);
+        
+        descArea = new JTextArea(4, 20);
+        descArea.setLineWrap(true);
+        JScrollPane scrollPane = new JScrollPane(descArea);
+        gbc.gridx = 1; gbc.gridy = 1;
+        formPanel.add(scrollPane, gbc);
+
+        // 3. Event Date Field
+        gbc.gridx = 0; gbc.gridy = 2;
+        formPanel.add(new JLabel("Date (YYYY-MM-DD):"), gbc);
+        
+        dateField = new JTextField(20);
+        gbc.gridx = 1; gbc.gridy = 2;
+        formPanel.add(dateField, gbc);
+
+        // 4. Submit Button
+        submitButton = new JButton("Create Event");
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.add(submitButton);
+
+        // Adding panels to the main frame
+        add(formPanel, BorderLayout.CENTER);
+        add(buttonPanel, BorderLayout.SOUTH);
+
+        // Action Listener for input validation when the button is clicked
+        submitButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                validateAndCreateEvent();
+            }
+        });
+    }
+
+    // Method to handle input validation
+    private void validateAndCreateEvent() {
+        String title = titleField.getText().trim();
+        String description = descArea.getText().trim();
+        String date = dateField.getText().trim();
+
+        // Validation check: If any field is left empty
+        if (title.isEmpty() || description.isEmpty() || date.isEmpty()) {
+            JOptionPane.showMessageDialog(this, 
+                    "All fields are required! Please fill out every field.", 
+                    "Validation Error", 
+                    JOptionPane.ERROR_MESSAGE);
+        } else {
+            // Success message if validation passes
+            String successMessage = "Event Created Successfully!\n\n" +
+                                    "Title: " + title + "\n" +
+                                    "Description: " + description + "\n" +
+                                    "Date: " + date;
+            
+            JOptionPane.showMessageDialog(this, successMessage, "Success", JOptionPane.INFORMATION_MESSAGE);
+            
+            // Clear the form fields after successful submission
+            titleField.setText("");
+            descArea.setText("");
+            dateField.setText("");
+        }
+    }
+
+    public static void main(String[] args) {
+        // Running the GUI application on the Event Dispatch Thread
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                new CalendarApp().setVisible(true);
+            }
+        });
+    }
+}
