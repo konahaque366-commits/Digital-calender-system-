@@ -1,0 +1,117 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.ArrayList;
+
+class Event {
+    private String title;
+    private String date;
+    private String description;
+
+    public Event(String title, String date, String description) {
+        this.title = title;
+        this.date = date;
+        this.description = description;
+    }
+
+    public String getTitle() { return title; }
+    public String getDate() { return date; }
+    public String getDescription() { return description; }
+
+    @Override
+    public String toString() {
+        return title; 
+    }
+}
+
+
+public class CalendarApp extends JFrame {
+
+    private JList<Event> eventJList;
+    private DefaultListModel<Event> listModel;
+    private JLabel titleLabel;
+    private JLabel dateLabel;
+    private JTextArea descriptionArea;
+
+    public CalendarApp(String selectedDate, ArrayList<Event> allEvents) {
+        
+        setTitle("Event Viewer - " + selectedDate);
+        setSize(550, 350);
+        setLayout(new BorderLayout(10, 10));
+        setLocationRelativeTo(null);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+
+        
+        JLabel headerLabel = new JLabel("Events for Date: " + selectedDate, SwingConstants.CENTER);
+        headerLabel.setFont(new Font("Arial", Font.BOLD, 16));
+        add(headerLabel, BorderLayout.NORTH);
+
+        
+        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+        splitPane.setDividerLocation(200);
+
+        
+        listModel = new DefaultListModel<>();
+        
+        
+        for (Event ev : allEvents) {
+            if (ev.getDate().equals(selectedDate)) {
+                listModel.addElement(ev);
+            }
+        }
+
+        eventJList = new JList<>(listModel);
+        eventJList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        JScrollPane listScrollPane = new JScrollPane(eventJList);
+        splitPane.setLeftComponent(listScrollPane);
+
+        
+        JPanel detailsPanel = new JPanel(new BorderLayout(10, 10));
+        detailsPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        JPanel infoPanel = new JPanel(new GridLayout(2, 1, 5, 5));
+        titleLabel = new JLabel("Title: Select an event");
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 14));
+        dateLabel = new JLabel("Date: " + selectedDate);
+        infoPanel.add(titleLabel);
+        infoPanel.add(dateLabel);
+
+        descriptionArea = new JTextArea("Select an event from the list to view details.");
+        descriptionArea.setEditable(false);
+        descriptionArea.setLineWrap(true);
+        descriptionArea.setWrapStyleWord(true);
+        JScrollPane descScrollPane = new JScrollPane(descriptionArea);
+
+        detailsPanel.add(infoPanel, BorderLayout.NORTH);
+        detailsPanel.add(descScrollPane, BorderLayout.CENTER);
+
+        splitPane.setRightComponent(detailsPanel);
+        add(splitPane, BorderLayout.CENTER);
+
+        
+        eventJList.addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                Event selectedEvent = eventJList.getSelectedValue();
+                if (selectedEvent != null) {
+                    titleLabel.setText("Title: " + selectedEvent.getTitle());
+                    dateLabel.setText("Date: " + selectedEvent.getDate());
+                    descriptionArea.setText(selectedEvent.getDescription());
+                }
+            }
+        });
+    }
+
+    
+    public static void main(String[] args) {
+        
+        ArrayList<Event> sampleEvents = new ArrayList<>();
+        sampleEvents.add(new Event("Lab Quiz", "2026-08-29", "Software Development Lab Quiz in Room 302."));
+        sampleEvents.add(new Event("Project Meeting", "2026-08-29", "Discussion about Week 6 Event Management Tasks."));
+        sampleEvents.add(new Event("Assignment Submission", "2026-08-30", "Submit Numerical Analysis Assignment."));
+
+        SwingUtilities.invokeLater(() -> {
+            new CalendarApp("2026-08-29", sampleEvents).setVisible(true);
+        });
+    }
+}
