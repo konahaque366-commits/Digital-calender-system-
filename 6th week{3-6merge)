@@ -1,0 +1,310 @@
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
+
+
+class Event {
+    private String title;
+    private String date;
+    private String description;
+
+    public Event(String title, String date, String description) {
+        this.title = title;
+        this.date = date;
+        this.description = description;
+    }
+
+    public String getTitle() { return title; }
+    public void setTitle(String title) { this.title = title; }
+    
+    public String getDate() { return date; }
+    public void setDate(String date) { this.date = date; }
+
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
+
+    @Override
+    public String toString() {
+        return title;
+    }
+}
+
+public class CalendarApp extends JFrame {
+
+    
+    private JLabel monthLabel;
+    private JTable calendarTable;
+    private DefaultTableModel tableModel;
+    private Calendar currentCalendar;
+    private int realYear, realMonth, realDay;
+
+    
+    private ArrayList<Event> eventList;
+
+   
+    private JList<Event> eventJList;
+    private DefaultListModel<Event> listModel;
+    private JLabel selectedDateLabel;
+    private JTextField titleField;
+    private JTextArea descriptionArea;
+    private JButton addEventBtn, editEventBtn, deleteEventBtn;
+    private String selectedDateStr = "";
+
+    public CalendarApp() {
+        
+        setTitle("Digital Calendar System (Week 3-6 Integrated)");
+        setSize(850, 500);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
+        setLayout(new BorderLayout(10, 10));
+
+        eventList = new ArrayList<>();
+        currentCalendar = new GregorianCalendar();
+        realYear = currentCalendar.get(Calendar.YEAR);
+        realMonth = currentCalendar.get(Calendar.MONTH);
+        realDay = currentCalendar.get(Calendar.DAY_OF_MONTH);
+
+        
+        eventList.add(new Event("Lab Quiz", String.format("%d-%02d-%02d", realYear, realMonth + 1, realDay), "Software Development Lab Quiz"));
+
+        
+        JPanel mainPanel = new JPanel(new GridLayout(1, 2, 10, 10));
+        mainPanel.add(createCalendarPanel());
+        mainPanel.add(createEventPanel());
+
+        add(mainPanel, BorderLayout.CENTER);
+        
+       
+        updateCalendar(realMonth, realYear);
+    }
+
+    
+    private JPanel createCalendarPanel() {
+        JPanel panel = new JPanel(new BorderLayout(5, 5));
+        panel.setBorder(BorderFactory.createTitledBorder("Calendar Navigation"));
+
+        
+        JPanel headerPanel = new JPanel(new BorderLayout());
+        JButton prevBtn = new JButton("< Prev");
+        JButton nextBtn = new JButton("Next >");
+        monthLabel = new JLabel("", SwingConstants.CENTER);
+        monthLabel.setFont(new Font("Arial", Font.BOLD, 16));
+
+        prevBtn.addActionListener(e -> {
+            currentCalendar.add(Calendar.MONTH, -1);
+            updateCalendar(currentCalendar.get(Calendar.MONTH), currentCalendar.get(Calendar.YEAR));
+        });
+
+        nextBtn.addActionListener(e -> {
+            currentCalendar.add(Calendar.MONTH, 1);
+            updateCalendar(currentCalendar.get(Calendar.MONTH), currentCalendar.get(Calendar.YEAR));
+        });
+
+        headerPanel.add(prevBtn, BorderLayout.WEST);
+        headerPanel.add(monthLabel, BorderLayout.CENTER);
+        headerPanel.add(nextBtn, BorderLayout.EAST);
+
+      
+        String[] columns = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
+        tableModel = new DefaultTableModel(null, columns) {
+            @Override
+            public boolean isCellEditable(int row, int column) { return false; }
+        };
+        
+        calendarTable = new JTable(tableModel);
+        calendarTable.setRowHeight(40);
+        calendarTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
+       
+        calendarTable.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                int row = calendarTable.getSelectedRow();
+                int col = calendarTable.getSelectedColumn();
+                if (row != -1 && col != -1 && calendarTable.getValueAt(row, col) != null) {
+                    int day = (int) calendarTable.getValueAt(row, col);
+                    int month = currentCalendar.get(Calendar.MONTH) + 1;
+                    int year = currentCalendar.get(Calendar.YEAR);
+                    selectedDateStr = String.format("%d-%02d-%02d", year, month, day);
+                    selectedDateLabel.setText("Selected Date: " + selectedDateStr);
+                    loadEventsForSelectedDate();
+                }
+            }
+        });
+
+        panel.add(headerPanel, BorderLayout.NORTH);
+        panel.add(new JScrollPane(calendarTable), BorderLayout.CENTER);
+        return panel;
+    }
+
+    private void updateCalendar(int month, int year) {
+        String[] months = {"January", "February", "March", "April", "May", "June", 
+                           "July", "August", "September", "October", "November", "December"};
+        monthLabel.setText(months[month] + " " + year);
+
+        tableModel.setRowCount(0);
+        Calendar cal = new GregorianCalendar(year, month, 1);
+        int startDay = cal.get(Calendar.DAY_OF_WEEK) - 1;
+        int numberOfDays = cal.getActualMaximum(Calendar.DAY_OF_MONTH);
+
+        Object[] row = new Object[7];
+        int currentCell = startDay;
+
+        for (int day = 1; day <= numberOfDays; day++) {
+            row[currentCell] = day;
+            currentCell++;
+            if (currentCell == 7) {
+                tableModel.addRow(row);
+                row = new Object[7];
+                currentCell = 0;
+            }
+        }
+        if (currentCell > 0) {
+            tableModel.addRow(row);
+        }
+    }
+
+    
+    private JPanel createEventPanel() {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBorder(BorderFactory.createTitledBorder("Event Details & Management"));
+
+        selectedDateLabel = new JLabel("Click a date on the calendar", SwingConstants.CENTER);
+        selectedDateLabel.setFont(new Font("Arial", Font.BOLD, 13));
+        panel.add(selectedDateLabel, BorderLayout.NORTH);
+
+        
+        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+        splitPane.setDividerLocation(150);
+
+        listModel = new DefaultListModel<>();
+        eventJList = new JList<>(listModel);
+        eventJList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        splitPane.setLeftComponent(new JScrollPane(eventJList));
+
+        
+        JPanel formPanel = new JPanel(new GridLayout(4, 1, 5, 5));
+        titleField = new JTextField();
+        descriptionArea = new JTextArea(3, 10);
+        descriptionArea.setLineWrap(true);
+
+        formPanel.add(new JLabel("Title:"));
+        formPanel.add(titleField);
+        formPanel.add(new JLabel("Description:"));
+        formPanel.add(new JScrollPane(descriptionArea));
+
+        splitPane.setRightComponent(formPanel);
+        panel.add(splitPane, BorderLayout.CENTER);
+
+        
+        eventJList.addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                Event sel = eventJList.getSelectedValue();
+                if (sel != null) {
+                    titleField.setText(sel.getTitle());
+                    descriptionArea.setText(sel.getDescription());
+                }
+            }
+        });
+
+        
+        JPanel btnPanel = new JPanel(new FlowLayout());
+        addEventBtn = new JButton("Add");
+        editEventBtn = new JButton("Edit");
+        deleteEventBtn = new JButton("Delete");
+
+        btnPanel.add(addEventBtn);
+        btnPanel.add(editEventBtn);
+        btnPanel.add(deleteEventBtn);
+        panel.add(btnPanel, BorderLayout.SOUTH);
+
+       
+        addEventBtn.addActionListener(e -> handleAddEvent());
+        editEventBtn.addActionListener(e -> handleEditEvent());
+        deleteEventBtn.addActionListener(e -> handleDeleteEvent());
+
+        return panel;
+    }
+
+    private void loadEventsForSelectedDate() {
+        listModel.clear();
+        titleField.setText("");
+        descriptionArea.setText("");
+        for (Event ev : eventList) {
+            if (ev.getDate().equals(selectedDateStr)) {
+                listModel.addElement(ev);
+            }
+        }
+    }
+
+   
+    private void handleAddEvent() {
+        if (selectedDateStr.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Select a date first!");
+            return;
+        }
+        String title = titleField.getText().trim();
+        String desc = descriptionArea.getText().trim();
+
+        if (title.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Title cannot be empty!", "Validation Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        Event newEvent = new Event(title, selectedDateStr, desc);
+        eventList.add(newEvent);
+        loadEventsForSelectedDate();
+        JOptionPane.showMessageDialog(this, "Event Added Successfully!");
+    }
+
+    
+    private void handleEditEvent() {
+        Event selectedEvent = eventJList.getSelectedValue();
+        if (selectedEvent == null) {
+            JOptionPane.showMessageDialog(this, "Select an event to edit!");
+            return;
+        }
+
+        String newTitle = titleField.getText().trim();
+        String newDesc = descriptionArea.getText().trim();
+
+        if (newTitle.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Title cannot be empty!");
+            return;
+        }
+
+        selectedEvent.setTitle(newTitle);
+        selectedEvent.setDescription(newDesc);
+        loadEventsForSelectedDate();
+        JOptionPane.showMessageDialog(this, "Event Updated Successfully!");
+    }
+
+    
+    private void handleDeleteEvent() {
+        Event selectedEvent = eventJList.getSelectedValue();
+        if (selectedEvent == null) {
+            JOptionPane.showMessageDialog(this, "Select an event to delete!");
+            return;
+        }
+
+        int confirm = JOptionPane.showConfirmDialog(this, 
+                "Are you sure you want to delete this event?", 
+                "Confirm Delete", 
+                JOptionPane.YES_NO_OPTION);
+
+        if (confirm == JOptionPane.YES_OPTION) {
+            eventList.remove(selectedEvent);
+            loadEventsForSelectedDate();
+            JOptionPane.showMessageDialog(this, "Event Deleted Successfully!");
+        }
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> new CalendarApp().setVisible(true));
+    }
+}
