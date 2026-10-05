@@ -1,5 +1,4 @@
-
-📅 Digital Calendar System
+Digital Calender System
 A simple, interactive, and user-friendly Digital Calendar System developed using Java Swing. This application allows users to view and navigate through different months and years using an easy-to-use graphical interface.
 
 📌 Project Overview
